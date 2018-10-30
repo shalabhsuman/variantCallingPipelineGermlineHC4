@@ -1,0 +1,28 @@
+maxThreads: 8
+maxJobs: 50
+execPath: '/DCEG/Resources/Tools/goldenhelix/sentieon-genomics-201808/bin/'
+outPath: '/DCEG/CGF/Bioinformatics/Production/Bari/Sentieon_germline_pipeline/example_runs/example_out/'
+workingPath: '/ttemp/bb_sentieon/germline_from_bam/'
+sampleFile: '/DCEG/CGF/Bioinformatics/Production/Bari/Sentieon_germline_pipeline/example_runs/example_bams.list'
+  # FOR germline_from_bam:
+    # sample /path/to/file.bam
+queue: 'seq-calling*.q'
+logDir: '/DCEG/CGF/Bioinformatics/Production/Bari/Sentieon_germline_pipeline/example_runs/example_logs/'
+snakePath: '/DCEG/CGF/Bioinformatics/Production/Bari/Sentieon_germline_pipeline/scripts/'
+sentLicense: '/DCEG/Resources/Tools/goldenhelix/Secondary-Analysis/GoldenHelix-NIH_NCI_DCEG_cluster.lic'
+# bed: '///.bed'
+
+# hg19
+# refGenome: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/hg19/ucsc.hg19.fasta'
+# MillsIndels: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz'
+# KGIndels: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz'
+# dbSNP: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/hg19/dbsnp_138.hg19.vcf.gz'
+# pon: '/DCEG/Projects/BB/BinBB/ICGC_Sep2016/TCGA/merged_all_passed_hg19_20180106.vcf'
+
+
+# b37
+refGenome: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/b37/human_g1k_v37_decoy.fasta'
+MillsIndels: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/b37/Mills_and_1000G_gold_standard.indels.b37.vcf.gz'
+KGIndels: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/b37/1000G_phase1.indels.b37.vcf.gz'
+dbSNP: '/DCEG/CGF/Bioinformatics/Production/Bari/gatk_resource_bundle/b37/dbsnp_138.b37.vcf.gz'
+# pon: '/DCEG/Projects/BB/BinBB/ICGC_Sep2016/TCGA/merged_all_passed_fixed_20180106.vcf'
