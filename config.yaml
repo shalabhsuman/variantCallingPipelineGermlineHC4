@@ -1,11 +1,10 @@
 maxThreads: 8
 maxJobs: 50
-execPath: '/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/'
-outPath: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/output/'
-workingPath: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/'
-sampleFile: '/DCEG/CGF/Bioinformatics/Production/Bari/Sentieon_germline_pipeline/example_runs/example_bams.list'
-  # FOR germline_from_bam:
-    # sample /path/to/file.bam
+gatkPath: '/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/gatk-package-4.0.11.0-local.jar'
+inputDir: '/Volumes/ifs/DCEG/Home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/example_data/bam'
+outputDir: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/output/'
+tempDir: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/'
+intervalFile: '/DCEG/Projects/Exome/SequencingData/variant_scripts_V3_in_process/variant_intervals_beds/variant_calling_intervals_120430_HG19_ExomeV3_UTR_merged_padded250bp_merged_4000parts/120430_HG19_ExomeV3_UTR_merged_padded250bp_merged.intervals'
 queue: 'seq-calling*.q'
 logDir: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/output/logs'
 snakePath: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/scripts/'
@@ -13,6 +12,6 @@ snakePath: '/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/scr
 # bed: '///.bed'
 
 # hg19
-# refGenome: '/CGF/Resources/Data/genome/hg19_canonical_correct_chr_order.fa'
+refGenome: '/CGF/Resources/Data/genome/hg19_canonical_correct_chr_order.fa'
 
 

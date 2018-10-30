@@ -1,266 +1,64 @@
 #!/usr/bin/env python3
 # Author: Shalabh Suman
 
-import os
+import os, glob
 import subprocess
 from pathlib import Path
 
-conf = os.environ.get("conf")
-configfile: conf
-ref = config['refGenome']
-nt = config['maxThreads']
-execPath = config['execPath']
-outDir = config['outPath']
-workingDir = config['workingPath']
-sampleFile = config['sampleFile']
-    # sample /path/to/file.bam (full paths; assuming bams are NOT deduped, bqsr'd)
-MillsIndels = config['MillsIndels']
-KGIndels = config['KGIndels']
-dbSNP = config['dbSNP']
+#conf = os.environ.get("conf")
+#configfile: conf
+#refGenome = config['refGenome']
+#nt = config['maxThreads']
+#gatkPath = config['gatkPath']
+#outputDir = config['outputDir']
+#inputDir = config['inputDir']
 
-tempRef = os.path.splitext(ref)[0]
-if ref.endswith(('.gz')):
-    refNoExt = os.path.splitext(tempRef)[0]
-else:
-    refNoExt = tempRef
 
-sampleDict = {}
-with open(sampleFile) as f:
-    for line in f:
-        (sample, file) = line.split()
-        sampleDict[sample] = (file)
+gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/gatk-package-4.0.11.0-local.jar"
 
-def get_file(wildcards):
-    (file) = sampleDict[wildcards.sample]
-    return file
+refGenome="/CGF/Resources/Data/genome/hg19_canonical_correct_chr_order.fa" 
 
-def get_index(wildcards):
-    (file) = sampleDict[wildcards.sample]
-    return file + '.bai'
+intervalFile="/DCEG/Projects/Exome/SequencingData/variant_scripts_V3_in_process/variant_intervals_beds/variant_calling_intervals_120430_HG19_ExomeV3_UTR_merged_padded250bp_merged_4000parts/120430_HG19_ExomeV3_UTR_merged_padded250bp_merged.intervals"
+
+inputDir="/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/example_data/bam/"
+
+outputDir="/home/sumans/Project_Git_Repos/variantCallingPipelineGermlineHC4/output/"
+tempDir="/ttemp/"
+
+bamList = [f for f in os.listdir(inputDir) if f.endswith('.bam')]
+
+sampleList=[os.path.splitext(f)[0] for f in os.listdir(inputDir) if f.endswith('.bam')]
+
+
 
 rule all:
     input:
-        expand(outDir + 'qc_metrics/{sample}_bqsr.pdf', sample=sampleDict.keys()),
-        outDir + 'merged_vcf/samples_merged.vcf'
+        expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList),
+        expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz.tbi', dataset=sampleList)
 
-rule index_ref:
-    input:
-        ref
-    output:
-        ref + '.fai'
-    shell:
-        'module load samtools/1.3.1;'
-        'samtools faidx {input}'
 
-rule bwa_index_ref:
-    input:
-        ref
-    output:
-        ref + '.amb',
-        ref + '.ann',
-        ref + '.bwt',
-        ref + '.pac',
-        ref + '.sa'
-    shell:
-        'module load bwa/0.7.9a;'
-        'bwa index -a bwtsw {input}'
 
-rule dict_ref:
+rule HC_gvcf_calling:
     input:
-        ref
+        ref = refGenome,
+        interval =  intervalFile,
+        bam = inputDir + '{dataset}.bam',
+        bai = inputDir + '{dataset}.bam.bai'
     output:
-        refNoExt + '.dict'
-    shell:
-        'module load Picard/1.126;'
-        'picard CreateSequenceDictionary REFERENCE={input} OUTPUT={output}'
-
-rule score_duplicates:
-    input:
-        bam = get_file,
-        bai = get_index
-    output:
-        txt = temp(workingDir + 'dedup/{sample}.score.txt'),
-        idx = temp(workingDir + 'dedup/{sample}.score.txt.idx')
+    	gvcf = outputDir + 'HC_gvcf/{dataset}.g.vcf'
     params:
-        e = execPath
-    threads: nt
+        e = gatkPath
     shell:
-        '{params.e}sentieon driver -t {threads} -i {input.bam} --algo LocusCollector --fun score_info {output.txt}'
+    	'java -jar {params.e} -R {input.ref} -T HaplotypeCaller -I {input.bam} --emitRefConfidence GVCF -L {input.interval} -o {output.gvcf}'
 
-rule remove_duplicates:
+rule HC_compress_gvcfs:
     input:
-        bam = get_file,
-        score = workingDir + 'dedup/{sample}.score.txt',
-        idx = workingDir + 'dedup/{sample}.score.txt.idx'
+        outputDir + 'HC_gvcf/{dataset}.g.vcf'
     output:
-        bam = workingDir + 'dedup/{sample}.bam',
-        bai = workingDir + 'dedup/{sample}.bam.bai',
-        # bam = temp(workingDir + 'dedup/{sample}_t.bam'),
-        # bai = temp(workingDir + 'dedup/{sample}_t.bam.bai'),
-        dedup_met = outDir + 'qc_metrics/{sample}.Dedup_metrics'
-    params:
-        e = execPath
-    threads: nt
+        outputDir + 'HC_gvcf/{dataset}.g.vcf.gz',
+        outputDir + 'HC_gvcf/{dataset}.g.vcf.gz.tbi'
     shell:
-        '{params.e}sentieon driver -t {threads} -i {input.bam} --algo Dedup --rmdup --score_info {input.score} --metrics {output.dedup_met} {output.bam}'
+        'module load tabix, bgzip'
+        'bgzip {input} && tabix -p vcf {input}.gz'
 
-rule indel_realignment:
-    input:
-        r = ref,
-        amb = ref + '.amb',
-        ann = ref + '.ann',
-        bwt = ref + '.bwt',
-        pac = ref + '.pac',
-        sa = ref + '.sa',
-        fai = ref + '.fai',
-        d = refNoExt + '.dict',
-        m = MillsIndels,
-        kg = KGIndels,
-        bam = workingDir + 'dedup/{sample}.bam'
-    output:
-        bam = workingDir + 'realign/{sample}.bam',
-        bai = workingDir + 'realign/{sample}.bam.bai'
-        # bam = temp(workingDir + 'realign/{sample}_t.bam'),
-        # bai = temp(workingDir + 'realign/{sample}_t.bam.bai')
-    params:
-        e = execPath
-    threads: nt
-    shell:
-        '{params.e}sentieon driver -t {threads} -r {input.r} -i {input.bam} --algo Realigner -k {input.m} -k {input.kg} {output.bam}'
 
-rule generate_BQSR_table:
-    input:
-        r = ref,
-        m = MillsIndels,
-        kg = KGIndels,
-        d = dbSNP,
-        bam = workingDir + 'realign/{sample}.bam'
-    output:
-        workingDir + 'bqsr/{sample}_recal.table'
-    params:
-        e = execPath
-    threads: nt
-    shell:
-        '{params.e}sentieon driver -t {threads} -r {input.r} -i {input.bam} --algo QualCal -k {input.d} -k {input.m} -k {input.kg} {output}'
-
-rule apply_bqsr:
-    input:
-        r = ref,
-        m = MillsIndels,
-        kg = KGIndels,
-        d = dbSNP,
-        bam = workingDir + 'realign/{sample}.bam',
-        table = workingDir + 'bqsr/{sample}_recal.table'
-    output:
-        postTable = temp(workingDir + 'bqsr/{sample}_post-recal.table'),
-        recalBam = workingDir + 'bqsr/{sample}.bam',
-        recalBai = workingDir + 'bqsr/{sample}.bam.bai'
-    params:
-        e = execPath
-    threads: nt
-    shell:
-        '{params.e}sentieon driver -t {threads} -r {input.r} -i {input.bam} -q {input.table} --algo QualCal -k {input.d} -k {input.m} -k {input.kg} {output.postTable} --algo ReadWriter {output.recalBam}'
-
-rule compare_bqsr_data:
-    input:
-        table = workingDir + 'bqsr/{sample}_recal.table',
-        postTable = workingDir + 'bqsr/{sample}_post-recal.table',
-    output:
-        workingDir + 'qc_metrics/{sample}_bqsr.csv'
-    params:
-        e = execPath
-    threads: nt
-    shell:
-        '{params.e}sentieon driver -t {threads} --algo QualCal --plot --before {input.table} --after {input.postTable} {output}'
-
-rule move_bqsr_csv:
-    input:
-        workingDir + 'qc_metrics/{sample}_bqsr.csv'
-    output:
-        outDir + 'qc_metrics/{sample}_bqsr.csv'
-    params:
-        outDir = outDir + 'qc_metrics/'
-    shell:
-        'mv {input} {params.outDir}'
-
-rule plot_bqsr_data:
-    input:
-        outDir + 'qc_metrics/{sample}_bqsr.csv'
-    output:
-        outDir + 'qc_metrics/{sample}_bqsr.pdf'
-    params:
-        e = execPath 
-    shell:
-        '{params.e}sentieon plot bqsr -o {output} {input}'
-
-rule move_bqsr:
-    input:
-        workingDir + 'bqsr/{sample}.bam',
-        workingDir + 'bqsr/{sample}.bam.bai'
-    output:
-        outDir + 'bqsr/{sample}.bam',
-        outDir + 'bqsr/{sample}.bam.bai'
-    params:
-        outDir = outDir + 'bqsr/'
-    shell:
-        'mv {input} {params.outDir}'
-
-rule Haplotyper_gvcf_calling:
-    input:
-        r = ref,
-        d = dbSNP,
-        bam = outDir + 'bqsr/{sample}.bam',
-        bai = outDir + 'bqsr/{sample}.bam.bai'
-    output:
-        vcf = workingDir + 'Haplotyper_gvcf/{sample}.g.vcf'
-    params:
-        e = execPath
-    threads: nt
-    shell:
-        '{params.e}sentieon driver -t {threads} -r {input.r} -i {input.bam} --algo Haplotyper --dbsnp {input.d} --emit_mode gvcf {output.vcf}'
-
-rule bgzip_gvcfs:
-    input:
-        workingDir + 'Haplotyper_gvcf/{sample}.g.vcf'
-    output:
-        workingDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz',
-        workingDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz.tbi'
-    shell:
-        'module load tabix;'
-        'bgzip {input}; tabix -p vcf {input}.gz'
-
-rule move_gvcfs:
-    input:
-        workingDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz',
-        workingDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz.tbi'
-    output:
-        outDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz',
-        outDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz.tbi'
-    params:
-        outDir = outDir + 'Haplotyper_gvcf/'
-    shell:
-        'mv {input} {params.outDir}'
-
-rule joint_variant_calling:
-    input:
-        r = ref,
-        d = dbSNP,
-        indices = expand(outDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz.tbi', sample=sampleDict.keys()),
-        i = expand(outDir + 'Haplotyper_gvcf/{sample}.g.vcf.gz', sample=sampleDict.keys())
-    output:
-        workingDir + 'merged_vcf/samples_merged.vcf'
-    params:
-        e = execPath,
-        ann = 'AC,AF,AN,BaseQRankSum,ClippingRankSum,DP,ExcessHet,FS,InbreedingCoeff,MLEAC,MLEAF,MQ,MQ0,MQRankSum,QD,RAW_MQ,ReadPosRankSum,SOR,SAC,AS_BaseQRankSum,AS_FS,AS_InbreedingCoeff,AS_MQRankSum,AS_QD,AS_MQ,AS_ReadPosRankSum,AS_SOR'  # all annotations provided by sentieon
-    shell:
-        '{params.e}sentieon driver -t {threads} -r {input.r} --algo GVCFtyper --annotation {params.ann} --dbsnp {input.d} {output} {input.i}'
-
-rule move_merged_vcf:
-    input:
-        workingDir + 'merged_vcf/samples_merged.vcf'
-    output:
-        outDir + 'merged_vcf/samples_merged.vcf'
-    params:
-        outDir = outDir + 'merged_vcf/'
-    shell:
-        'mv {input} {params.outDir}'
