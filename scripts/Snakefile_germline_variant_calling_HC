@@ -49,7 +49,7 @@ rule HC_gvcf_calling:
     params:
         e = gatkPath
     shell:
-    	'java -jar {params.e} -R {input.ref} -T HaplotypeCaller -I {input.bam} --emitRefConfidence GVCF -L {input.interval} -o {output.gvcf}'
+    	'java -jar {params.e} HaplotypeCaller -R {input.ref} -I {input.bam} -ERC GVCF -L {input.interval} -O {output.gvcf}'
 
 rule HC_compress_gvcfs:
     input:
