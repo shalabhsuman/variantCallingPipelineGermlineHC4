@@ -68,16 +68,18 @@ rule HC_compress_gvcfs:
 rule HC_genomicsDBImport:
     input:
         interval =  intervalFile,
-        gvcfList =  expand('-V ' + outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
+        gvcfList =  expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
+    params:
+        e = gatkPath,
+        gvcfList_params =  expand('-V ' + outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
     output:
     	db = outputDir + 'HC_db'
-    params:
-        e = gatkPath
     shell:
-    	'java -jar {params.e} GenomicsDBImport {input.gvcfList} --genomicsdb-workspace-path {output.db} -L {input.interval}'
+    	'java -jar {params.e} GenomicsDBImport {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L {input.interval}'
     	
 rule HC_genotypeGVCFs:
     input:
+    	ref = refGenome,
         interval =  intervalFile,
         db = outputDir + 'HC_db'
     output:
@@ -86,6 +88,6 @@ rule HC_genotypeGVCFs:
     params:
         e = gatkPath
     shell:
-    	'java -jar {params.e} GenotypeGVCFs -R {input.ref} -V gendb:{output.db} } -O {output.vcf} -L {input.interval}'
+    	'java -jar {params.e} GenotypeGVCFs -R {input.ref} -V gendb:{input.db} -O {output.vcf} -L {input.interval}'
 
     	
