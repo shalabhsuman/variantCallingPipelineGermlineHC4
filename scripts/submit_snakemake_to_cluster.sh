@@ -24,4 +24,10 @@ mkdir -p $logDir 2>/dev/null
 ds=`date "+%Y-%m-%d_%H%M%S"`
 
 
-conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC --cluster "qsub -V -q $queue -j y -o $logDir" --jobs $maxJobs --latency-wait 300 &> $logDir"log.out."$ds
+#conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC --cluster "qsub -V -q $queue -j y -o $logDir" --jobs $maxJobs --latency-wait 300 &> $logDir"log.out."$ds
+
+
+
+conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC --rerun-incomplete --cluster "qsub -q $queue -pe by_node 5 -o $logDir -e $logDir" --jobs $maxJobs --latency-wait 300 &> $logDir"log.out."$ds
+
+#conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC --unlock 

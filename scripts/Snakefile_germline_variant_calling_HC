@@ -29,13 +29,16 @@ bamList = [f for f in os.listdir(inputDir) if f.endswith('.bam')]
 
 sampleList=[os.path.splitext(f)[0] for f in os.listdir(inputDir) if f.endswith('.bam')]
 
+#ds=`date "+%Y-%m-%d_%H%M%S"`
+
 
 
 rule all:
     input:
-        expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList),
-        expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz.tbi', dataset=sampleList)
-
+       	expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList),
+       	expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz.tbi', dataset=sampleList),
+    	vcf = outputDir + 'HC_genotypeGvcf/project.vcf.gz',
+    	idx = outputDir + 'HC_genotypeGvcf/project.vcf.gz.tbi'
 
 
 rule HC_gvcf_calling:
@@ -62,3 +65,27 @@ rule HC_compress_gvcfs:
         'bgzip {input} && tabix -p vcf {input}.gz'
 
 
+rule HC_genomicsDBImport:
+    input:
+        interval =  intervalFile,
+        gvcfList =  expand('-V ' + outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
+    output:
+    	db = outputDir + 'HC_db'
+    params:
+        e = gatkPath
+    shell:
+    	'java -jar {params.e} GenomicsDBImport {input.gvcfList} --genomicsdb-workspace-path {output.db} -L {input.interval}'
+    	
+rule HC_genotypeGVCFs:
+    input:
+        interval =  intervalFile,
+        db = outputDir + 'HC_db'
+    output:
+    	vcf = outputDir + 'HC_genotypeGvcf/project.vcf.gz',
+    	idx = outputDir + 'HC_genotypeGvcf/project.vcf.gz.tbi'
+    params:
+        e = gatkPath
+    shell:
+    	'java -jar {params.e} GenotypeGVCFs -R {input.ref} -V gendb:{output.db} } -O {output.vcf} -L {input.interval}'
+
+    	
