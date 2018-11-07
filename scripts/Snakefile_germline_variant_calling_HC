@@ -14,7 +14,9 @@ from pathlib import Path
 #inputDir = config['inputDir']
 
 
-gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/gatk-package-4.0.11.0-local.jar"
+gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/gatk"
+
+#gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.9.0/gatk"
 
 refGenome="/CGF/Resources/Data/genome/hg19_canonical_correct_chr_order.fa" 
 
@@ -48,7 +50,7 @@ rule HC_gvcf_calling:
         bam = inputDir + '{dataset}.bam',
         bai = inputDir + '{dataset}.bam.bai'
     output:
-    	gvcf = outputDir + 'HC_gvcf/{dataset}.g.vcf'
+    	gvcf = directory(outputDir + 'HC_gvcf/{dataset}.g.vcf')
     params:
         e = gatkPath
     shell:
@@ -61,33 +63,33 @@ rule HC_compress_gvcfs:
         outputDir + 'HC_gvcf/{dataset}.g.vcf.gz',
         outputDir + 'HC_gvcf/{dataset}.g.vcf.gz.tbi'
     shell:
-        'module load tabix, bgzip'
+        'module load tabix, bgzip;'
         'bgzip {input} && tabix -p vcf {input}.gz'
 
 
 rule HC_genomicsDBImport:
-    input:
-        interval =  intervalFile,
-        gvcfList =  expand(outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
+    input: 
+    	gvcfList = expand(outputDir + "HC_gvcf/{dataset}.g.vcf.gz", dataset=sampleList),
+    	interval =  intervalFile
     params:
         e = gatkPath,
-        gvcfList_params =  expand('-V ' + outputDir + 'HC_gvcf/{dataset}.g.vcf.gz', dataset=sampleList)
+        gvcfList_params = lambda wildcards, input:" -V ".join(input.gvcfList)
     output:
-    	db = outputDir + 'HC_db'
+    	db = outputDir + 'HC_db_2'
     shell:
-    	'java -jar {params.e} GenomicsDBImport {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L {input.interval}'
+    	'{params.e} --java-options "-Xmx4G" GenomicsDBImport -V {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L chr2'
     	
 rule HC_genotypeGVCFs:
     input:
     	ref = refGenome,
         interval =  intervalFile,
-        db = outputDir + 'HC_db'
+        db = outputDir + 'HC_db_2'
     output:
     	vcf = outputDir + 'HC_genotypeGvcf/project.vcf.gz',
     	idx = outputDir + 'HC_genotypeGvcf/project.vcf.gz.tbi'
     params:
         e = gatkPath
     shell:
-    	'java -jar {params.e} GenotypeGVCFs -R {input.ref} -V gendb:{input.db} -O {output.vcf} -L {input.interval}'
+    	'{params.e} --java-options "-Xmx4G" GenotypeGVCFs -R {input.ref} -V gendb:{input.db} -O {output.vcf} -L {input.interval}'
 
     	
