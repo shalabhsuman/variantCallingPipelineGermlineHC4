@@ -50,7 +50,7 @@ rule HC_gvcf_calling:
         bam = inputDir + '{dataset}.bam',
         bai = inputDir + '{dataset}.bam.bai'
     output:
-    	gvcf = directory(outputDir + 'HC_gvcf/{dataset}.g.vcf')
+    	gvcf = outputDir + 'HC_gvcf/{dataset}.g.vcf'
     params:
         e = gatkPath
     shell:
@@ -75,21 +75,21 @@ rule HC_genomicsDBImport:
         e = gatkPath,
         gvcfList_params = lambda wildcards, input:" -V ".join(input.gvcfList)
     output:
-    	db = outputDir + 'HC_db_2'
+    	db = directory(outputDir + 'HC_db')
     shell:
-    	'{params.e} --java-options "-Xmx4G" GenomicsDBImport -V {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L chr2'
+    	'{params.e} --java-options "-Xmx4G" GenomicsDBImport -V {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L {input.interval}'
     	
 rule HC_genotypeGVCFs:
     input:
     	ref = refGenome,
         interval =  intervalFile,
-        db = outputDir + 'HC_db_2'
+        db = directory(outputDir + 'HC_db')
     output:
     	vcf = outputDir + 'HC_genotypeGvcf/project.vcf.gz',
     	idx = outputDir + 'HC_genotypeGvcf/project.vcf.gz.tbi'
     params:
         e = gatkPath
     shell:
-    	'{params.e} --java-options "-Xmx4G" GenotypeGVCFs -R {input.ref} -V gendb:{input.db} -O {output.vcf} -L {input.interval}'
+    	'{params.e} --java-options "-Xmx4G" GenotypeGVCFs -R {input.ref} -V gendb://{input.db} -O {output.vcf} --tmp-dir=/ttemp'
 
     	
