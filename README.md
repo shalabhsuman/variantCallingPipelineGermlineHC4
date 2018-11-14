@@ -1,6 +1,6 @@
 # VariantCallingPipeline-Germline-HC4
 ## CGR's Latest Version of Germline Variant Calling Pipeline with SnakeMake and GATK4 (..IN PROGRESS..)
-[TOC]
+
 
 ## Introduction
 This Pipeline will serve as an CGR WGS/WES Germline Variant calling pipeline for external projects (non-production builds). Current plan is to have this pipeline take calibrated BAMs as input and it will generate a compressed and indexed VCF file as Final output.
