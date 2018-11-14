@@ -5,4 +5,4 @@
 
 ### Outline of the workflow:
 
-![Workflow - Phase 1] (./Figures/Workflow.png)
+![Workflow - Phase 1](Figures/Workflow.png)
