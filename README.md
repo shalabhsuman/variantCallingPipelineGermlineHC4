@@ -33,4 +33,15 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   + Stict Bash Mode (Error Handling). Non-Zero Status means failure
   + Can detect incomplete results' files
   
+## Pipeline/HPC Failure Scenarios Tested
+  1. Job failure by itself. (java error, memory issue, core dump, etc.)
+    1.1 without output.
+    1.2 with partial output.
+  2. Job failed due to cluster issue. (job killed by the cluster)
+    2.1 without output.
+    2.2 with partial output.
+  3. Job entered in to eqw/dr status (not easy to simulate, let’s be creative here).
+  4. Job stuck in the “r” status (Snakemake will simply wait under this situation, which is expected and not very harmful, other than wasting computational time until the user realizes it)   
+  5. Any other error scenario…?
+  
   
