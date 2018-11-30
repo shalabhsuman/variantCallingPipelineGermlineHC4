@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+# Author: Shalabh Suman
+
+import os, glob
+import subprocess
+from pathlib import Path
+
+#conf = os.environ.get("conf")
+#configfile: conf
+#refGenome = config['refGenome']
+#nt = config['maxThreads']
+#gatkPath = config['gatkPath']
+#outputDir = config['outputDir']
+#inputDir = config['inputDir']
+
+
+gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.11.0/gatk"
+
+#gatkPath="/DCEG/Projects/Exome/SequencingData/GATK_binaries/gatk-4.0.9.0/gatk"
+
+refGenome="/CGF/Resources/Data/genome/hg19_canonical_correct_chr_order.fa" 
+
+dictionaryFile="/DCEG/Resources/Data/genome/hg19_canonical_correct_chr_order.dict"
+
+intervalFile="/DCEG/Projects/Exome/SequencingData/variant_scripts_V3_in_process/variant_intervals_beds/variant_calling_intervals_120430_HG19_ExomeV3_UTR_merged_padded250bp_merged_4000parts/120430_HG19_ExomeV3_UTR_merged_padded250bp_merged.intervals"
+
+inputDir="/DCEG/CGF/Bioinformatics/Production/Shalabh/variantCallingPipelineGermlineHC4/example_data/bam/"
+
+outputDir="/DCEG/CGF/Bioinformatics/Production/Shalabh/variantCallingPipelineGermlineHC4/output_ScatterGather_2/"
+tempDir="/ttemp/"
+
+bamList = [f for f in os.listdir(inputDir) if f.endswith('.bam')]
+
+sampleList=[os.path.splitext(f)[0] for f in os.listdir(inputDir) if f.endswith('.bam')]
+
+chromList = []
+with open(dictionaryFile) as f:
+    next(f)
+    for line in f:
+        f1 = line.split("\t")[1]
+        f2 = f1.split(":")[1]
+        chromList.append(f2)
+
+#ds=`date "+%Y-%m-%d_%H%M%S"`
+
+
+
+rule all:
+    input:
+    	expand(outputDir + 'HC_gvcf/{dataset}.g.vcf', dataset=sampleList),
+       	expand(outputDir + 'HC_gvcf_compress/{dataset}.g.vcf.gz', dataset=sampleList),
+       	expand(outputDir + 'HC_gvcf_compress/{dataset}.g.vcf.gz.tbi', dataset=sampleList),
+       	expand(outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz', chromosome=chromList),
+       	expand(outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz.tbi', chromosome=chromList),
+   		vcf = outputDir + 'HC_gatherVcf/build_final.vcf.gz',
+   		idx = outputDir + 'HC_gatherVcf/build_final.vcf.gz.tbi',
+   		vcf2 = outputDir + 'HC_gatherVcf/build_final_bcftools.vcf.gz',
+    	idx2 = outputDir + 'HC_gatherVcf/build_final_bcftools.vcf.gz.tbi'
+
+
+rule HC_gvcf_calling:
+    input:
+        ref = refGenome,
+        interval =  intervalFile,
+        bam = inputDir + '{dataset}.bam',
+        bai = inputDir + '{dataset}.bam.bai'
+    output:
+    	gvcf = outputDir + 'HC_gvcf/{dataset}.g.vcf'
+    params:
+        e = gatkPath
+    shell:
+    	'{params.e} --java-options "-Xmx4G" HaplotypeCaller -R {input.ref} -I {input.bam} -ERC GVCF -L {input.interval} -O {output.gvcf}'
+
+rule HC_compress_gvcfs:
+    input:
+        outputDir + 'HC_gvcf/{dataset}.g.vcf'
+    output:
+        vcf = outputDir + 'HC_gvcf_compress/{dataset}.g.vcf.gz',
+        idx = outputDir + 'HC_gvcf_compress/{dataset}.g.vcf.gz.tbi'
+    shell:
+        'source /etc/profile.d/modules.sh; module load tabix bgzip;'
+        'bgzip -c {input} > {output.vcf} && tabix -p vcf {output.vcf}'
+
+
+rule HC_genomicsDBImport:
+    input: 
+    	gvcfList = expand(outputDir + "HC_gvcf_compress/{dataset}.g.vcf.gz", dataset=sampleList)
+#    	gvcfList = expand(outputDir + "HC_gvcf/{dataset}.g.vcf", dataset=sampleList)
+#    	interval =  intervalFile
+    params:
+        e = gatkPath,
+        gvcfList_params = lambda wildcards, input:" -V ".join(input.gvcfList),
+        interval = '{chromosome}'
+    output:
+    	db = directory(outputDir + 'HC_db_{chromosome}')
+    shell:
+    	'{params.e} --java-options "-Xmx4G" GenomicsDBImport -V {params.gvcfList_params} --genomicsdb-workspace-path {output.db} -L {params.interval}'
+    	
+rule HC_genotypeGVCFs:
+    input:
+    	ref = refGenome,
+        interval =  intervalFile,
+        db = directory(outputDir + 'HC_db_{chromosome}')
+    output:
+    	vcf = outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz',
+    	idx = outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz.tbi'
+    params:
+        e = gatkPath
+    shell:
+    	'{params.e} --java-options "-Xmx4G" GenotypeGVCFs -R {input.ref} -V gendb://{input.db} -O {output.vcf} --tmp-dir=/ttemp'
+    	
+rule HC_gatherVCFs_gatk:
+	input:
+		vcfList = expand(outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz', chromosome=chromList)
+	output:
+		projectVCF = outputDir + 'HC_gatherVcf/build_final.vcf.gz'
+	params:
+		e = gatkPath,
+		vcfList_params = lambda wildcards, input:" -I ".join(input.vcfList)
+	shell:
+		'{params.e} --java-options "-Xmx4G" GatherVcfsCloud -I {params.vcfList_params} -O {output.projectVCF}'
+		
+rule HC_compressFinalVcf:
+	input:
+		vcf = outputDir + 'HC_gatherVcf/build_final.vcf.gz'
+	output:
+		idx = outputDir + 'HC_gatherVcf/build_final.vcf.gz.tbi'
+	shell:
+		'source /etc/profile.d/modules.sh;'
+		'module load tabix;'
+		'tabix -p vcf {input.vcf}'
+		
+rule HC_gatherVCFs_bcftools:
+	input:
+		vcfList = expand(outputDir + 'HC_genotypeGvcf/{chromosome}.vcf.gz', chromosome=chromList)
+	output:
+		projectVCF = outputDir + 'HC_gatherVcf/build_final_bcftools.vcf.gz',
+		projectIDX = outputDir + 'HC_gatherVcf/build_final_bcftools.vcf.gz.tbi'
+	params:
+		e = gatkPath
+#		vcfList_params = input.vcfList
+	shell:
+		'source /etc/profile.d/modules.sh; module load bcftools tabix; bcftools concat {input.vcfList} -Oz -o {output.projectVCF}; tabix -p vcf {output.projectVCF}'
+
+    	
