@@ -32,6 +32,7 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   + Has the capacity to remember  when a job is terminated without comletion or without a warning (for e.g. - random cluster failures)
   + Stict Bash Mode (Error Handling). Non-Zero Status means failure
   + Can detect incomplete results' files
+  + Added option to check for Zero-Size files
   
 ## Pipeline/HPC Failure Scenarios Test
   1. Job failure by itself. (java error, memory issue, core dump, etc.)
@@ -43,5 +44,7 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   3. Job entered in to eqw/dr status (not easy to simulate, let’s be creative here)
   4. Job stuck in the “r” status (Snakemake will simply wait under this situation, which is expected and not very harmful, other than wasting computational time until the user realizes it)   
   5. Any other error scenario…?
+      + How to work with Empty or Incomplete Directories
+      + Resumability of an analyis (for example - gvcf generation job) from the beginning or from the point it got interrupted??
   
   
