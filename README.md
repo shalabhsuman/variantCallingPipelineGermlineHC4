@@ -23,10 +23,9 @@ This Pipeline will serve as an CGR WGS/WES Germline Variant calling pipeline for
   + Adding Concatenation Workflow after GenotypeGVCF 
   + Adding Different Cores and SGE environment for different rules
   
-  
 ## Features
 * Pipeline-Automation-ErrorTrackingSpecific Features
- + "Protected" output VCF files
- + Directory Feature added to the Snakemake to check for timestamp
- + Flags to be added to monitor Pipeline Completion
+  + "Protected" output VCF files
+  + Directory Feature added to the Snakemake to check for timestamp
+  + Flags to be added to monitor Pipeline Completion
   
