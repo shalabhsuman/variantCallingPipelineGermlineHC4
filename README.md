@@ -21,4 +21,12 @@ This Pipeline will serve as an CGR WGS/WES Germline Variant calling pipeline for
 * Future Work:
   + Adding Scatter and Gather Workflow for GenomicsDBIImport (to optimize for WGS/WES analysis)
   + Adding Concatenation Workflow after GenotypeGVCF 
+  + Adding Different Cores and SGE environment for different rules
+  
+  
+## Features
+* Pipeline-Automation-ErrorTrackingSpecific Features
+ + "Protected" output VCF files
+ + Directory Feature added to the Snakemake to check for timestamp
+ + Flags to be added to monitor Pipeline Completion
   
