@@ -22,7 +22,7 @@ maxJobs=10
 queue=xlong.q
 
 scriptDir=/DCEG/CGF/Bioinformatics/Production/Shalabh/variantCallingPipelineGermlineHC4/scripts
-logDir=/DCEG/CGF/Bioinformatics/Production/Shalabh/variantCallingPipelineGermlineHC4/logs_ScatterGather_2/
+logDir=/DCEG/CGF/Bioinformatics/Production/Shalabh/variantCallingPipelineGermlineHC4/logs_ScatterGather_3/
 
 mkdir -p $logDir 2>/dev/null
 
@@ -38,4 +38,4 @@ ds=`date "+%Y-%m-%d_%H%M%S"`
 
 #conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC --unlock 
 
-conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC_ScatterGather -p --rerun-incomplete --cluster "qsub -q $queue -pe by_node 10 -o $logDir -e $logDir" --jobs $maxJobs --latency-wait 300 &> $logDir"log.out."$ds
+conf=$configFile snakemake -s ${scriptDir}/Snakefile_germline_variant_calling_HC_ScatterGather -p --rerun-incomplete --cluster "qsub -q $queue -pe by_node {threads} -o $logDir -e $logDir" --jobs $maxJobs --latency-wait 300 &> $logDir"log.out."$ds

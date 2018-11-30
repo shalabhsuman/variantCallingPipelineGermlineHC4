@@ -23,16 +23,20 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   + Adding Scatter and Gather Workflow for GenomicsDBIImport (to optimize for WGS/WES analysis)
   + Adding Concatenation Workflow after GenotypeGVCF 
   + Adding Different Cores and SGE environment for different rules
+  + Integrating Conda to run multiple environments of Python
+  + Building better Control over cluster SGE parameters..for eg- Job Name according to Rule & Sample ID
+  + Directing Logs to Rules Folders for better management
   
 ## Features
 * Pipeline-Automation-ErrorTrackingSpecific Features
   + "Protected" output VCF files
   + Directory Feature added to the Snakemake to check for timestamp
-  + Flags to be added to monitor Pipeline Completion
+  + Flags added to monitor Pipeline Completion
   + Has the capacity to remember  when a job is terminated without comletion or without a warning (for e.g. - random cluster failures)
-  + Stict Bash Mode (Error Handling). Non-Zero Status means failure
+  + Stict Bash Mode (Error Handling). Non-Zero error Status means failure
   + Can detect incomplete results' files
   + Added option to check for Zero-Size files
+  + Support for Customized Cores/Multi-threading per Rule (or step in the pipeline)
   
 ## Pipeline/HPC Failure Scenarios Test
   1. Job failure by itself. (java error, memory issue, core dump, etc.)
@@ -46,5 +50,6 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   5. Any other error scenario…?
       + How to work with Empty or Incomplete Directories
       + Resumability of an analyis (for example - gvcf generation job) from the beginning or from the point it got interrupted??
+      + Voluntary Termination vs Interupted Jobs
   
   
