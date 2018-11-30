@@ -29,4 +29,8 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   + "Protected" output VCF files
   + Directory Feature added to the Snakemake to check for timestamp
   + Flags to be added to monitor Pipeline Completion
+  + Has the capacity to remember  when a job is terminated without comletion or without a warning (for e.g. - random cluster failures)
+  + Stict Bash Mode (Error Handling). Non-Zero Status means failure
+  + Can detect incomplete results' files
+  
   
