@@ -6,9 +6,11 @@ import subprocess
 from pathlib import Path
 
 conf = os.environ.get("conf")
-configfile: conf
+#print (conf)
+#configfile: conf
+configfile: "./config.yaml"
 refGenome = config['refGenome']
-dictionaryFile=config['dictionaryFile']
+dictionaryFile = config['dictionaryFile']
 gatkPath = config['gatkPath']
 intervalFile = config['intervalFile']
 outputDir = config['outputDir']
