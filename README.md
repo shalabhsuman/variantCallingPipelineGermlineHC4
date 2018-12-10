@@ -26,6 +26,7 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
   + Integrating Conda to run multiple environments of Python
   + Building better Control over cluster SGE parameters..for eg- Job Name according to Rule & Sample ID
   + Directing Logs to Rules Folders for better management
+  + Adding Customized Tool-Level Annotations..both Variant-level and Allele-Specific.
   
 ## Features
 * Pipeline-Automation-ErrorTrackingSpecific Features
