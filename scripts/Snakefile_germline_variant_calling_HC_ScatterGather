@@ -8,6 +8,7 @@ from pathlib import Path
 conf = os.environ.get("conf")
 #print (conf)
 #configfile: conf
+#configfile: "./config_CTRL.yaml"
 configfile: "./config.yaml"
 refGenome = config['refGenome']
 dictionaryFile = config['dictionaryFile']
@@ -77,7 +78,15 @@ rule HC_gvcf_calling:
         e = gatkPath
     threads: 5
     shell:
-    	'{params.e} --java-options "-Xmx4G" HaplotypeCaller -R {input.ref} -I {input.bam} -ERC GVCF -L {input.interval} -O {output.gvcf}'
+    	'{params.e} --java-options "-Xmx4G" HaplotypeCaller \
+    	-R {input.ref} \
+    	-I {input.bam} \
+    	-ERC GVCF \
+    	-L {input.interval} \
+    	-O {output.gvcf} \
+    	-new-qual \
+    	-G StandardAnnotation \
+    	-G StandardHCAnnotation'
 
 rule HC_compress_gvcfs:
     input:
@@ -122,7 +131,15 @@ rule HC_genotypeGVCFs:
         e = gatkPath
     threads: 5
     shell:
-    	'[[ -f {input.flag} ]] && {params.e} --java-options "-Xmx4G" GenotypeGVCFs -R {input.ref} -V gendb://{input.db} -O {output.vcf} --tmp-dir=/ttemp'
+    	'[[ -f {input.flag} ]] && \
+    	{params.e} --java-options "-Xmx4G" GenotypeGVCFs \
+    	-R {input.ref} \
+    	-V gendb://{input.db} \
+    	-O {output.vcf} \
+    	--tmp-dir=/ttemp \
+    	-new-qual -stand-call-conf 30 \
+    	-G StandardAnnotation \
+    	-G StandardHCAnnotation'
     	
 rule HC_gatherVCFs_gatk:
 	input:
