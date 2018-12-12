@@ -6,9 +6,9 @@
 This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for external projects (non-production builds). Current plan is to have this pipeline take calibrated BAMs as input and have it generate a compressed and indexed VCF file as Final output.
 
 ## Outline of the workflow:
-![Workflow - Scatter & Gather for WGS/WES](Figures/workflow_scatter_gather_v2.png)
+**Workflow - Scatter & Gather for WGS/WES:** ![Workflow - Scatter & Gather for WGS/WES](Figures/workflow_scatter_gather_v2.png)
 
-![Workflow - Normal for Small genomic region](Figures/Workflow.png)
+**Workflow - Regular for Small genomic region:** ![Workflow - Normal for Small genomic region](Figures/Workflow.png)
 
 ## Status
 
