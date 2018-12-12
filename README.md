@@ -13,11 +13,11 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
 ## Status
 
 * Current Work:
-  + Testing GATK 4 - Done
-  + Testing Snakemake as an alternative for workflow management insted of Bash/AWK workflow thats being used currently for current Germline V3 Pipeline - Done
-  + Testing NEW HaplotypeCaller Workflow in GATK 4 - Done
-  + Testing GenomicsDBIImport Module - Done
-  + Testing GenotypeGVCF module (differnt from GATK 3's GenotypeGVCF) - Done
+  + Testing GATK 4 - **Done**
+  + Testing Snakemake as an alternative for workflow management insted of Bash/AWK workflow thats being used currently for current Germline V3 Pipeline - **Done**
+  + Testing NEW HaplotypeCaller Workflow in GATK 4 - **Done**
+  + Testing GenomicsDBIImport Module - **Done**
+  + Testing GenotypeGVCF module (differnt from GATK 3's GenotypeGVCF) - **Done**
   + Adding Scatter and Gather Workflow for GenomicsDBIImport (to optimize for WGS/WES analysis)
   + Adding Concatenation Workflow after GenotypeGVCF
   + Testing both GATK and BCFtools for concatenation of parts (Gather)
@@ -32,7 +32,7 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
  
   
 ## Features
-* Pipeline-Automation-ErrorTrackingSpecific Features
+* **Pipeline-Automation-ErrorTrackingSpecific Features**
   + "Protected" output VCF files
   + Directory Feature added to the Snakemake to check for timestamp
   + Flags added to monitor Pipeline Completion
