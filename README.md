@@ -13,20 +13,23 @@ This Pipeline will serve as a CGR WGS/WES Germline Variant calling pipeline for 
 ## Status
 
 * Current Work:
-  + Testing GATK 4
-  + Testing Snakemake as an alternative for workflow management insted of Bash/AWK workflow thats being used currently for current Germline V3 Pipeline
-  + Testing NEW HaplotypeCaller Workflow in GATK 4
-  + Testing GenomicsDBIImport Module
-  + Testing GenotypeGVCF module (differnt from GATK 3's GenotypeGVCF)
+  + Testing GATK 4 - Done
+  + Testing Snakemake as an alternative for workflow management insted of Bash/AWK workflow thats being used currently for current Germline V3 Pipeline - Done
+  + Testing NEW HaplotypeCaller Workflow in GATK 4 - Done
+  + Testing GenomicsDBIImport Module - Done
+  + Testing GenotypeGVCF module (differnt from GATK 3's GenotypeGVCF) - Done
+  + Adding Scatter and Gather Workflow for GenomicsDBIImport (to optimize for WGS/WES analysis)
+  + Adding Concatenation Workflow after GenotypeGVCF
+  + Testing both GATK and BCFtools for concatenation of parts (Gather)
+  + Adding Different Cores and SGE environment for different rules
+  + Adding Customized Tool-Level Annotations..both Variant-level and Allele-Specific.
   
 * Future Work:
-  + Adding Scatter and Gather Workflow for GenomicsDBIImport (to optimize for WGS/WES analysis)
-  + Adding Concatenation Workflow after GenotypeGVCF 
-  + Adding Different Cores and SGE environment for different rules
   + Integrating Conda to run multiple environments of Python
   + Building better Control over cluster SGE parameters..for eg- Job Name according to Rule & Sample ID
   + Directing Logs to Rules Folders for better management
-  + Adding Customized Tool-Level Annotations..both Variant-level and Allele-Specific.
+  + Assigning Temp Folders that are specific for each build
+ 
   
 ## Features
 * Pipeline-Automation-ErrorTrackingSpecific Features
